@@ -19,15 +19,16 @@ import {
     FormControl,
     InputLabel,
     CircularProgress,
+    Grid2
 } from '@mui/material';
 import { Delete, Edit } from '@mui/icons-material';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import {  useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { db } from '../auth/firebase';
 import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
-import 'react-datepicker/dist/react-datepicker.css';
+
 
 const Home = () => {
     const [todos, setTodos] = useState([]);
@@ -145,9 +146,9 @@ const Home = () => {
                 </Card>
             </Box>
 
-            <Dialog open={openDialog} onClose={clearForm} sx={{ justifyContent: 'center', display: 'flex' }}>
+            <Dialog open={openDialog} onClose={clearForm} sx={{ justifyContent: 'center', display: 'flex', height: '800px' }}>
                 <DialogTitle>{isEditing ? 'Edit To-Do' : 'Add To-Do'}</DialogTitle>
-                <DialogContent>
+                <DialogContent sx={{ height: '400px', width: '500px' }} >
                     <TextField
                         label="To-Do Title"
                         fullWidth
@@ -155,17 +156,29 @@ const Home = () => {
                         onChange={(e) => setCurrentTodo({ ...currentTodo, title: e.target.value })}
                         sx={{ mt: 5 }}
                     />
-                    <DatePicker
-                        selected={currentTodo.date instanceof Date ? currentTodo.date : new Date()}
-                        onChange={(date) => setCurrentTodo({ ...currentTodo, date })}
-                        popperPlacement="bottom"
-                        dateFormat="MMMM d, yyyy"
-                        placeholderText="Select a date"
-                        className="react-datepicker"
-                    />
+                    <Grid2
+                        container
+                        alignItems="center"
+
+                    >
+                        <Typography variant='caption'>Add Deadline: </Typography>
+                        <DatePicker
+                            selected={currentTodo.date instanceof Date ? currentTodo.date : new Date()}
+                            onChange={(date) => setCurrentTodo({ ...currentTodo, date })}
+                            popperPlacement="bottom"
+                            popperContainer={({ children }) => <div className=''>{children}</div>}
+
+                            dateFormat="MMMM d, yyyy"
+                            placeholderText="Select a date"
+                            className="react-datepicker"
+                        />
+                    </Grid2>
                     <FormControl fullWidth sx={{ mt: 2 }}>
-                        <InputLabel>Priority</InputLabel>
+                        <InputLabel id="Priority">Priority</InputLabel>
                         <Select
+                            labelId="Priority"
+                            label="Priority"
+
                             value={currentTodo.priority}
                             onChange={(e) => setCurrentTodo({ ...currentTodo, priority: e.target.value })}
                         >
