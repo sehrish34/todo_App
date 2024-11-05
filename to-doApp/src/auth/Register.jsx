@@ -3,6 +3,7 @@ import { Card, CardContent, Typography, TextField, Button, Box } from '@mui/mate
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from './firebase';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 import { setDoc, doc } from 'firebase/firestore';
 import useValidation from '../hooks/useValidation';
@@ -11,7 +12,8 @@ const Register = () => {
     const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '' });
     const { errors, validateField, clearError } = useValidation();
     const [generalError, setGeneralError] = useState(null);
-    
+    const { signup } = useAuth();
+
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -41,14 +43,7 @@ const Register = () => {
 
 
         try {
-            await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-            const user = auth.currentUser;
-            if (user) {
-                await setDoc(doc(db, "Users", user.uid), {
-                    email: user.email
-                });
-            }
-     
+            await signup(formData.email, formData.password);
             navigate('/home');
         } catch (err) {
             setGeneralError(err.message);
@@ -99,7 +94,7 @@ const Register = () => {
                         error={!!errors.confirmPassword}
                         helperText={errors.confirmPassword}
                     />
-                       {generalError && (
+                    {generalError && (
                         <Typography color="error" align="center" sx={{ mt: 2 }}>
                             {generalError}
                         </Typography>

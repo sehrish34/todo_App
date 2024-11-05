@@ -8,15 +8,15 @@ import { Navigate } from 'react-router-dom';
 
 
 export const RoutesLayout = () => {
-    const { user } = useAuth();
+    const { currentUser } = useAuth();
 
     return (
         <Router>
             <Routes>
-                <Route path="/" element={user ? <Home /> : <Login />} />
-                <Route path="/home" element={user ? <Home /> : <Navigate to="/login" />} />
-                <Route path="/login" element={!user ? <Login /> : <Navigate to="/" />} />
-                <Route path="/register" element={!user ? <Registration /> : <Navigate to="/" />} />
+                <Route path="/" element={currentUser ? <Home /> : <Login />} />
+                <Route path="/home" element={currentUser ? <Home /> : <Navigate to="/login" />} />
+                <Route path="/login" element={!currentUser ? <Login /> : <Navigate to="/" />} />
+                <Route path="/register" element={!currentUser ? <Registration /> : <Navigate to="/" />} />
 
             </Routes>
         </Router>)

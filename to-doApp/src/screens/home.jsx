@@ -18,22 +18,26 @@ import {
     Select,
     FormControl,
     InputLabel,
+    CircularProgress,
 } from '@mui/material';
 import { Delete, Edit } from '@mui/icons-material';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { auth } from '../auth/firebase';
-import { Navigate, useNavigate } from 'react-router-dom';
+import {  useNavigate } from 'react-router-dom';
 import { db } from '../auth/firebase';
 import { collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
+import { useAuth } from '../context/AuthContext';
+import 'react-datepicker/dist/react-datepicker.css';
 
 const Home = () => {
     const [todos, setTodos] = useState([]);
+    const { currentUser, logout, loading } = useAuth()
+
     const [currentTodo, setCurrentTodo] = useState({ id: null, title: '', date: new Date(), priority: 'Medium' });
     const [isEditing, setIsEditing] = useState(false);
     const [openDialog, setOpenDialog] = useState(false);
     const navigate = useNavigate();
-    const userId = auth.currentUser.uid;
+    const userId = currentUser.uid;
 
     useEffect(() => {
         const todosRef = collection(db, 'todos');
@@ -86,12 +90,25 @@ const Home = () => {
 
     const sortedTodos = [...todos].sort((a, b) => {
         const priorityOrder = { High: 1, Medium: 2, Low: 3 };
-        return priorityOrder[a.priority] - priorityOrder[b.priority];
+
+        const priorityComparison = priorityOrder[a.priority] - priorityOrder[b.priority];
+
+        if (priorityComparison === 0) {
+            const dateA = new Date(a.dueDate).getTime();
+            const dateB = new Date(b.dueDate).getTime();
+
+            return dateA - dateB;
+        }
+
+        return priorityComparison;
     });
 
     const handleLogout = async () => {
-        await auth.signOut();
+        await logout();
         navigate('/login');
+    }
+    if (loading) {
+        return <CircularProgress />;
     }
 
     return (
@@ -126,44 +143,46 @@ const Home = () => {
                         </List>
                     </CardContent>
                 </Card>
-
-                <Dialog open={openDialog} onClose={clearForm}>
-                    <DialogTitle>{isEditing ? 'Edit To-Do' : 'Add To-Do'}</DialogTitle>
-                    <DialogContent>
-                        <TextField
-                            label="To-Do Title"
-                            fullWidth
-                            value={currentTodo.title}
-                            onChange={(e) => setCurrentTodo({ ...currentTodo, title: e.target.value })}
-                        />
-                        <DatePicker
-                            selected={currentTodo.date instanceof Date ? currentTodo.date : new Date()}
-                            onChange={(date) => setCurrentTodo({ ...currentTodo, date })}
-                            dateFormat="MMMM d, yyyy"
-                            placeholderText="Select a date"
-                            className="react-datepicker"
-                        />
-                        <FormControl fullWidth sx={{ mt: 2 }}>
-                            <InputLabel>Priority</InputLabel>
-                            <Select
-                                value={currentTodo.priority}
-                                onChange={(e) => setCurrentTodo({ ...currentTodo, priority: e.target.value })}
-                            >
-                                <MenuItem value="High">High</MenuItem>
-                                <MenuItem value="Medium">Medium</MenuItem>
-                                <MenuItem value="Low">Low</MenuItem>
-                            </Select>
-                        </FormControl>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={clearForm}>Cancel</Button>
-                        <Button onClick={handleUpdateTodo}>
-                            {isEditing ? 'Update' : 'Add'}
-                        </Button>
-                    </DialogActions>
-                </Dialog>
-
             </Box>
+
+            <Dialog open={openDialog} onClose={clearForm} sx={{ justifyContent: 'center', display: 'flex' }}>
+                <DialogTitle>{isEditing ? 'Edit To-Do' : 'Add To-Do'}</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        label="To-Do Title"
+                        fullWidth
+                        value={currentTodo.title}
+                        onChange={(e) => setCurrentTodo({ ...currentTodo, title: e.target.value })}
+                        sx={{ mt: 5 }}
+                    />
+                    <DatePicker
+                        selected={currentTodo.date instanceof Date ? currentTodo.date : new Date()}
+                        onChange={(date) => setCurrentTodo({ ...currentTodo, date })}
+                        popperPlacement="bottom"
+                        dateFormat="MMMM d, yyyy"
+                        placeholderText="Select a date"
+                        className="react-datepicker"
+                    />
+                    <FormControl fullWidth sx={{ mt: 2 }}>
+                        <InputLabel>Priority</InputLabel>
+                        <Select
+                            value={currentTodo.priority}
+                            onChange={(e) => setCurrentTodo({ ...currentTodo, priority: e.target.value })}
+                        >
+                            <MenuItem value="High">High</MenuItem>
+                            <MenuItem value="Medium">Medium</MenuItem>
+                            <MenuItem value="Low">Low</MenuItem>
+                        </Select>
+                    </FormControl>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={clearForm}>Cancel</Button>
+                    <Button onClick={handleUpdateTodo}>
+                        {isEditing ? 'Update' : 'Add'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
             <Button onClick={handleLogout}>Logout</Button>
         </>
     );

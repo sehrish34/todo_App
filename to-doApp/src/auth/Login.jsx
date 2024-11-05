@@ -4,12 +4,13 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from './firebase';
 import useValidation from '../hooks/useValidation';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
     const [formData, setFormData] = useState({ email: '', password: '' });
     const { errors, validateField, clearError } = useValidation();
     const [generalError, setGeneralError] = useState(null);
+    const { login } = useAuth()
 
     const navigate = useNavigate();
 
@@ -34,12 +35,11 @@ const Login = () => {
         }
 
         try {
-            await signInWithEmailAndPassword(auth, formData.email, formData.password);
-   
-            navigate('/home')
+            await login(formData.email, formData.password);
+            navigate('/home');
         } catch (err) {
             validateField('email', '', { required: true });
-            
+            setGeneralError(err.message);
         }
     };
 
@@ -74,6 +74,11 @@ const Login = () => {
                         error={!!errors.password}
                         helperText={errors.password}
                     />
+                         {generalError && (
+                        <Typography color="error" align="center" sx={{ mt: 2 }}>
+                            {generalError}
+                        </Typography>
+                    )}
                     <Button
                         fullWidth
                         variant="contained"
